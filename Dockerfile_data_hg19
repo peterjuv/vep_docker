@@ -2,14 +2,22 @@ FROM alpine/git as intermediate
 RUN git clone https://github.com/konradjk/loftee.git /loftee
 
 FROM alpine as download_loftee
-RUN wget https://personal.broadinstitute.org/konradk/loftee_data/GRCh38/human_ancestor.fa.gz -Y off
-RUN wget https://personal.broadinstitute.org/konradk/loftee_data/GRCh38/human_ancestor.fa.gz.fai -Y off
-RUN wget https://personal.broadinstitute.org/konradk/loftee_data/GRCh38/human_ancestor.fa.gz.gzi -Y off
-RUN wget https://personal.broadinstitute.org/konradk/loftee_data/GRCh38/gerp_conservation_scores.homo_sapiens.GRCh38.bw -Y off
+RUN wget https://personal.broadinstitute.org/konradk/loftee_data/GRCh37/human_ancestor.fa.gz -Y off
+RUN wget https://personal.broadinstitute.org/konradk/loftee_data/GRCh37/human_ancestor.fa.gz.fai -Y off
+RUN wget https://personal.broadinstitute.org/konradk/loftee_data/GRCh37/human_ancestor.fa.gz.gzi -Y off
+#For hg19 GERP scores are not in BigWig (.bw) format, so the workflow may need to be adjusted accordingly
+RUN wget https://personal.broadinstitute.org/konradk/loftee_data/GRCh37/GERP_scores.final.sorted.txt.gz -Y off
+RUN wget https://personal.broadinstitute.org/konradk/loftee_data/GRCh37/GERP_scores.final.sorted.txt.gz.tbi -Y off
 RUN wget https://personal.broadinstitute.org/konradk/loftee_data/GRCh38/loftee.sql.gz -Y off
 RUN wget https://personal.broadinstitute.org/konradk/loftee_data/GRCh37/phylocsf_gerp.sql.gz -Y off
 
-FROM ensemblorg/ensembl-vep:release_110.1
+FROM alpine as download_AlphaMissense
+#Download the Alpha Missense hg19 data file and index it
+RUN wget https://console.cloud.google.com/storage/browser/_details/dm_alphamissense/AlphaMissense_hg19.tsv.gz -Y off
+RUN tabix -s 1 -b 2 -e 2 -f -S 1 AlphaMissense_hg19.tsv.gz
+
+#Updated to VEP release 112 to support AlphaMissense
+FROM ensemblorg/ensembl-vep:release_112.0
 # Change user to root
 USER root
 
@@ -38,3 +46,4 @@ COPY --from=intermediate /loftee /opt/vep/.vep/Plugins/loftee
 COPY --from=download_loftee /human_ancestor.fa* /opt/vep/.vep/Plugins/loftee/data/
 COPY --from=download_loftee /gerp* /opt/vep/.vep/Plugins/loftee/data/
 COPY --from=download_loftee /loftee* /opt/vep/.vep/Plugins/loftee/data/
+COPY --from=download_AlphaMissense /AlphaMissense* /opt/vep/.vep/Plugins/AlphaMissense/

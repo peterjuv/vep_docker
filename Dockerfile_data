@@ -9,7 +9,14 @@ RUN wget https://personal.broadinstitute.org/konradk/loftee_data/GRCh38/gerp_con
 RUN wget https://personal.broadinstitute.org/konradk/loftee_data/GRCh38/loftee.sql.gz -Y off
 RUN wget https://personal.broadinstitute.org/konradk/loftee_data/GRCh37/phylocsf_gerp.sql.gz -Y off
 
-FROM ensemblorg/ensembl-vep:release_110.1
+
+FROM alpine as download_AlphaMissense
+#Download the Alpha Missense hg38 data file and index it
+RUN wget https://console.cloud.google.com/storage/browser/_details/dm_alphamissense/AlphaMissense_hg38.tsv.gz -Y off
+RUN tabix -s 1 -b 2 -e 2 -f -S 1 AlphaMissense_hg38.tsv.gz
+
+#Updated to VEP release 112 to support AlphaMissense
+FROM ensemblorg/ensembl-vep:release_112.0
 # Change user to root
 USER root
 
@@ -38,3 +45,4 @@ COPY --from=intermediate /loftee /opt/vep/.vep/Plugins/loftee
 COPY --from=download_loftee /human_ancestor.fa* /opt/vep/.vep/Plugins/loftee/data/
 COPY --from=download_loftee /gerp* /opt/vep/.vep/Plugins/loftee/data/
 COPY --from=download_loftee /loftee* /opt/vep/.vep/Plugins/loftee/data/
+COPY --from=download_AlphaMissense /AlphaMissense* /opt/vep/.vep/Plugins/AlphaMissense/
