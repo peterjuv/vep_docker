@@ -11,10 +11,50 @@ RUN wget https://personal.broadinstitute.org/konradk/loftee_data/GRCh37/GERP_sco
 RUN wget https://personal.broadinstitute.org/konradk/loftee_data/GRCh38/loftee.sql.gz -Y off
 RUN wget https://personal.broadinstitute.org/konradk/loftee_data/GRCh37/phylocsf_gerp.sql.gz -Y off
 
-#Download tabix so we can index the AM dataset
-RUN apk add tabix
-
 FROM alpine as download_AlphaMissense
+
+#Download tabix so we can index the AM dataset
+#Installs dependencies (and removes some unnecessary tar files later)
+RUN apk add --no-cache \
+    gcc \
+    g++ \
+    make \
+    zlib-dev \
+    curl \
+    curl-dev \
+    tar \
+    bzip2 \
+    bzip2-dev \
+    xz \
+    xz-dev
+
+# Download and extract HTSlib (version 1.20, newest as of 28.8.2024)
+RUN curl -L https://github.com/samtools/htslib/releases/download/1.20/htslib-1.20.tar.bz2 -o htslib.tar.bz2 \
+    && tar -xjf htslib.tar.bz2
+# Check installation
+RUN ls -la htslib-1.20
+# Build and install HTSlib
+RUN cd htslib-1.20 \
+    && make install
+
+# Clean up unnecessary dependencies to 
+RUN rm -rf htslib-1.20 htslib.tar.bz2 \
+    && apk del \
+    gcc \
+    g++ \
+    make 
+
+# Add the tabix command to the PATH
+ENV PATH="/usr/local/bin:${PATH}"
+
+# Verify installation
+RUN tabix --version
+
+# Add the tabix command to the PATH
+ENV PATH="/usr/local/bin:${PATH}"
+
+# Verify installation
+RUN tabix --version
 #Download the Alpha Missense hg19 data file and index it
 RUN wget https://storage.googleapis.com/dm_alphamissense/AlphaMissense_hg19.tsv.gz -Y off
 RUN tabix -s 1 -b 2 -e 2 -f -S 1 AlphaMissense_hg19.tsv.gz
