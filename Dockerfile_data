@@ -9,6 +9,8 @@ RUN wget https://personal.broadinstitute.org/konradk/loftee_data/GRCh38/gerp_con
 RUN wget https://personal.broadinstitute.org/konradk/loftee_data/GRCh38/loftee.sql.gz -Y off
 RUN wget https://personal.broadinstitute.org/konradk/loftee_data/GRCh37/phylocsf_gerp.sql.gz -Y off
 
+#Download tabix so we can index the AM dataset
+RUN apk add tabix
 
 FROM alpine as download_AlphaMissense
 #Download the Alpha Missense hg38 data file and index it
