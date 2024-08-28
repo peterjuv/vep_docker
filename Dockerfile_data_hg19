@@ -13,7 +13,7 @@ RUN wget https://personal.broadinstitute.org/konradk/loftee_data/GRCh37/phylocsf
 
 FROM alpine as download_AlphaMissense
 #Download the Alpha Missense hg19 data file and index it
-RUN wget https://console.cloud.google.com/storage/browser/_details/dm_alphamissense/AlphaMissense_hg19.tsv.gz -Y off
+RUN wget https://storage.googleapis.com/dm_alphamissense/AlphaMissense_hg19.tsv.gz -Y off
 RUN tabix -s 1 -b 2 -e 2 -f -S 1 AlphaMissense_hg19.tsv.gz
 
 #Updated to VEP release 112 to support AlphaMissense
