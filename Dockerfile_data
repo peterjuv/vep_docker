@@ -9,8 +9,6 @@ RUN wget https://personal.broadinstitute.org/konradk/loftee_data/GRCh38/gerp_con
 RUN wget https://personal.broadinstitute.org/konradk/loftee_data/GRCh38/loftee.sql.gz -Y off
 RUN wget https://personal.broadinstitute.org/konradk/loftee_data/GRCh37/phylocsf_gerp.sql.gz -Y off
 
-
-
 FROM alpine as download_AlphaMissense
 
 #Download tabix so we can index the AM dataset
@@ -37,14 +35,14 @@ RUN ls -la htslib-1.20
 RUN cd htslib-1.20 \
     && make install
 
-# Clean up unnecessary dependencies to 
+# Clean up unnecessary dependencies to save space
 RUN rm -rf htslib-1.20 htslib.tar.bz2 \
     && apk del \
     gcc \
     g++ \
     make 
 
-# Add the tabix command to the PATH
+# Add the PATH environmental variable
 ENV PATH="/usr/local/bin:${PATH}"
 
 # Verify installation
