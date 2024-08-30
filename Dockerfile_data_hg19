@@ -66,7 +66,7 @@ USER vep
 RUN perl /opt/vep/src/ensembl-vep/INSTALL.pl \
         --AUTO fcp \
         --NO_UPDATE \
-        --ASSEMBLY hg19 \
+        --ASSEMBLY GRCh37 \
         --PLUGINSDIR /opt/vep/.vep/Plugins/ \
         --CACHEDIR /opt/vep/.vep/ \
         --PLUGINS all \
