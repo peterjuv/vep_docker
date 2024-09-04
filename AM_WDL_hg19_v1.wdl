@@ -49,6 +49,7 @@ task AlphaMissense_docker {
     }
 
     runtime {
+        #Note: never mount to /data, it's a reserved directory by Docker
         docker: "alesmaver/vep_grch37"
         volumes: "${input_dir}:/input_data"
         #Given that the VEP AM plugin is fairly resource-hungry, we could increase this
