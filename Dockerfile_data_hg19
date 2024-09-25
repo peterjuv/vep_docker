@@ -53,6 +53,7 @@ RUN tabix --version
 RUN wget https://storage.googleapis.com/dm_alphamissense/AlphaMissense_hg19.tsv.gz -Y off
 RUN tabix -s 1 -b 2 -e 2 -f -S 1 AlphaMissense_hg19.tsv.gz
 
+
 #Updated to VEP release 112 to support AlphaMissense
 FROM ensemblorg/ensembl-vep:release_112.0
 # Change user to root
@@ -60,24 +61,50 @@ USER root
 
 RUN apt-get update && apt-get install -y samtools
 
-# Change user to vep
+# Create necessary directories and set permissions
+RUN mkdir -p /opt/vep/.vep/Plugins/AlphaMissense && \
+    chmod 777 /opt/vep/.vep/Plugins/AlphaMissense
+
+# Copy AlphaMissense files
+COPY AlphaMissense_hg19.tsv.gz /opt/vep/.vep/Plugins/AlphaMissense/AlphaMissense_hg19.tsv.gz
+COPY AlphaMissense_hg19.tsv.gz.tbi /opt/vep/.vep/Plugins/AlphaMissense/AlphaMissense_hg19.tsv.gz.tbi
+
+# Change permissions for AlphaMissense files
+RUN chmod 777 /opt/vep/.vep/Plugins/AlphaMissense/AlphaMissense_hg19.tsv.gz && \
+    chmod 777 /opt/vep/.vep/Plugins/AlphaMissense/AlphaMissense_hg19.tsv.gz.tbi
+
+RUN ls -l /opt/vep/.vep/Plugins/AlphaMissense/AlphaMissense_hg19.tsv.gz
+
+# Debugging step: Check the contents of the Plugins directory
+RUN ls -l /opt/vep/.vep/Plugins
+
+# Debugging step: Check the contents of the INSTALL.pl script
+RUN cat /opt/vep/src/ensembl-vep/INSTALL.pl
+
 USER vep
 
+#Removed trailing slash from the path to plugins
 RUN perl /opt/vep/src/ensembl-vep/INSTALL.pl \
         --AUTO fcp \
         --NO_UPDATE \
         --ASSEMBLY GRCh37 \
-        --PLUGINSDIR /opt/vep/.vep/Plugins/ \
-        --CACHEDIR /opt/vep/.vep/ \
         --PLUGINS all \
         --SPECIES homo_sapiens_merged
 
-#RUN vep -id rs699 \
-#      --cache --assembly GRCh37 --merged \
-#      --nearest symbol \
-#      -o 'STDOUT' \
-#      --no_stats \
-#      > /dev/null
+COPY C099_hg19.vcf /opt/vep/.vep/C099_hg19.vcf
+
+
+
+
+RUN vep --input_file /opt/vep/.vep/C099_hg19.vcf \
+      --cache --assembly GRCh37 --merged \
+      --offline \
+      --nearest symbol \
+      -o 'STDOUT' \
+      --no_stats \
+      > /dev/null
+
+RUN rm /opt/vep/.vep/C099_hg19.vcf
 
 COPY --from=intermediate /loftee /opt/vep/.vep/Plugins/loftee
 COPY --from=download_loftee /human_ancestor.fa* /opt/vep/.vep/Plugins/loftee/data/
