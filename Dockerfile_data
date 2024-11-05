@@ -1,3 +1,4 @@
+# STAGE 1 - download databases
 FROM alpine/git as intermediate
 RUN git clone https://github.com/konradjk/loftee.git /loftee
 
@@ -9,7 +10,23 @@ RUN wget https://personal.broadinstitute.org/konradk/loftee_data/GRCh38/gerp_con
 RUN wget https://personal.broadinstitute.org/konradk/loftee_data/GRCh38/loftee.sql.gz -Y off
 RUN wget https://personal.broadinstitute.org/konradk/loftee_data/GRCh37/phylocsf_gerp.sql.gz -Y off
 
-FROM ensemblorg/ensembl-vep:release_110.1
+# STAGE 2 - build dbNSFP recent version
+FROM debian as dbnsfp_build
+
+RUN apt-get update && \
+	apt-get install -y wget tabix samtools unzip aria2
+
+# Put shell script inside container
+RUN mkdir /opt/scripts
+COPY dbNSFP_pipeline_build.sh /opt/scripts/
+
+WORKDIR /data
+
+RUN /opt/scripts/dbNSFP_pipeline_build.sh
+
+# STAGE 3 - Create the docker image
+# FROM ensemblorg/ensembl-vep:release_110.1
+FROM ensemblorg/ensembl-vep
 # Change user to root
 USER root
 
@@ -38,3 +55,7 @@ COPY --from=intermediate /loftee /opt/vep/.vep/Plugins/loftee
 COPY --from=download_loftee /human_ancestor.fa* /opt/vep/.vep/Plugins/loftee/data/
 COPY --from=download_loftee /gerp* /opt/vep/.vep/Plugins/loftee/data/
 COPY --from=download_loftee /loftee* /opt/vep/.vep/Plugins/loftee/data/
+
+RUN mkdir -p /opt/vep/.vep/dbNSFP
+COPY --from=dbnsfp_build /data/dbNSFPv4.9a_custombuild.gz /opt/vep/.vep/dbNSFP/
+COPY --from=dbnsfp_build /data/dbNSFPv4.9a_custombuild.gz.tbi /opt/vep/.vep/dbNSFP/
