@@ -1,7 +1,12 @@
+##############################
 # STAGE 1 - download databases
+##############################
 FROM alpine/git as intermediate
 RUN git clone https://github.com/konradjk/loftee.git /loftee
 
+##############################
+# STAGE 2 - Download loftee DBs
+##############################
 FROM alpine as download_loftee
 RUN wget https://personal.broadinstitute.org/konradk/loftee_data/GRCh38/human_ancestor.fa.gz -Y off
 RUN wget https://personal.broadinstitute.org/konradk/loftee_data/GRCh38/human_ancestor.fa.gz.fai -Y off
@@ -10,7 +15,10 @@ RUN wget https://personal.broadinstitute.org/konradk/loftee_data/GRCh38/gerp_con
 RUN wget https://personal.broadinstitute.org/konradk/loftee_data/GRCh38/loftee.sql.gz -Y off
 RUN wget https://personal.broadinstitute.org/konradk/loftee_data/GRCh37/phylocsf_gerp.sql.gz -Y off
 
-# STAGE 2 - build dbNSFP recent version
+##############################
+# STAGE 3 - build dbNSFP recent version
+# Code for script obtained from https://github.com/GenomicsAotearoa/dbNSFP_build
+##############################
 FROM debian as dbnsfp_build
 
 RUN apt-get update && \
@@ -24,10 +32,64 @@ WORKDIR /data
 
 RUN /opt/scripts/dbNSFP_pipeline_build.sh
 
-# STAGE 3 - Create the docker image
+##############################
+# STAGE 4 - Prepare AlphaMissense DB
+# Prepared by Aleksander
+##############################
+FROM alpine as download_AlphaMissense
+
+#Download tabix so we can index the AM dataset
+#Installs dependencies (and removes some unnecessary tar files later)
+RUN apk add --no-cache \
+    gcc \
+    g++ \
+    make \
+    zlib-dev \
+    curl \
+    curl-dev \
+    tar \
+    bzip2 \
+    bzip2-dev \
+    xz \
+    xz-dev
+
+# Download and extract HTSlib (version 1.20, newest as of 28.8.2024)
+RUN curl -L https://github.com/samtools/htslib/releases/download/1.20/htslib-1.20.tar.bz2 -o htslib.tar.bz2 \
+    && tar -xjf htslib.tar.bz2
+# Check installation
+RUN ls -la htslib-1.20
+# Build and install HTSlib
+RUN cd htslib-1.20 \
+    && make install
+
+# Clean up unnecessary dependencies to save space
+RUN rm -rf htslib-1.20 htslib.tar.bz2 \
+    && apk del \
+    gcc \
+    g++ \
+    make 
+
+# Add the PATH environmental variable
+ENV PATH="/usr/local/bin:${PATH}"
+
+# Verify installation
+RUN tabix --version
+#Download the Alpha Missense hg38 data file and index it
+RUN wget https://storage.googleapis.com/dm_alphamissense/AlphaMissense_hg38.tsv.gz -Y off
+RUN tabix -s 1 -b 2 -e 2 -f -S 1 AlphaMissense_hg38.tsv.gz
+
+##############################
+# STAGE 5 - Create VEP docker, copy relevant datasets to the image
+# VEP should at least release 112 to support AlphaMissense (Aleksander) # FROM ensemblorg/ensembl-vep:release_112.0
+##############################
+
+# Image history
 # FROM ensemblorg/ensembl-vep:release_110.1
+# FROM ensemblorg/ensembl-vep:release_112.0
+
 FROM ensemblorg/ensembl-vep
-# Change user to root
+
+# Needs to be root to allow image modifications
 USER root
 
 RUN apt-get update && apt-get install -y samtools
@@ -59,3 +121,6 @@ COPY --from=download_loftee /loftee* /opt/vep/.vep/Plugins/loftee/data/
 RUN mkdir -p /opt/vep/.vep/dbNSFP
 COPY --from=dbnsfp_build /data/dbNSFPv4.9a_custombuild.gz /opt/vep/.vep/dbNSFP/
 COPY --from=dbnsfp_build /data/dbNSFPv4.9a_custombuild.gz.tbi /opt/vep/.vep/dbNSFP/
+
+COPY --from=download_AlphaMissense /AlphaMissense* /opt/vep/.vep/Plugins/AlphaMissense/
+
