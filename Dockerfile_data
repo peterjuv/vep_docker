@@ -2,7 +2,9 @@
 # STAGE 1 - download databases
 ##############################
 FROM alpine/git as intermediate
-RUN git clone https://github.com/konradjk/loftee.git /loftee
+#RUN git clone https://github.com/konradjk/loftee.git /loftee
+RUN git clone --single-branch --branch grch38 https://github.com/konradjk/loftee.git /loftee
+
 
 ##############################
 # STAGE 2 - Download loftee DBs
@@ -18,6 +20,7 @@ RUN wget https://personal.broadinstitute.org/konradk/loftee_data/GRCh37/phylocsf
 ##############################
 # STAGE 3 - build dbNSFP recent version
 # Code for script obtained from https://github.com/GenomicsAotearoa/dbNSFP_build
+# Need to update version @ dbNSFP_pipeline_build.sh
 ##############################
 FROM debian as dbnsfp_build
 
@@ -119,8 +122,8 @@ COPY --from=download_loftee /gerp* /opt/vep/.vep/Plugins/loftee/data/
 COPY --from=download_loftee /loftee* /opt/vep/.vep/Plugins/loftee/data/
 
 RUN mkdir -p /opt/vep/.vep/dbNSFP
-COPY --from=dbnsfp_build /data/dbNSFPv4.9a_custombuild.gz /opt/vep/.vep/dbNSFP/
-COPY --from=dbnsfp_build /data/dbNSFPv4.9a_custombuild.gz.tbi /opt/vep/.vep/dbNSFP/
+COPY --from=dbnsfp_build /data/dbNSFP_custombuild.gz /opt/vep/.vep/dbNSFP/
+COPY --from=dbnsfp_build /data/dbNSFP_custombuild.gz.tbi /opt/vep/.vep/dbNSFP/
 
 COPY --from=download_AlphaMissense /AlphaMissense* /opt/vep/.vep/Plugins/AlphaMissense/
 
