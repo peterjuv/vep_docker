@@ -43,13 +43,13 @@ custom_build() {
 		cat dbNSFP${version}_variant.*.gz | zgrep -v '#chr' | bgzip -@ ${THREADS} > dbNSFPv${version}_custom.gz
 
 		# add header back into file
-		cat header.gz dbNSFPv${version}_custom.gz > dbNSFP_custombuild.gz
+		cat header.gz dbNSFPv${version}_custom.gz > dbNSFPv${version}_custombuild.gz
 
 		# Create tabix index
-		tabix -s 1 -b 2 -e 2 dbNSFP_custombuild.gz
+		tabix -s 1 -b 2 -e 2 dbNSFPv${version}_custombuild.gz
 
 		# test annotation
-		# java -jar ~/install/snpEff/SnpSift.jar dbnsfp -v -db /mnt/dbNSFP/hg19/dbNSFP_custombuild.gz test/chr1_test.vcf > test/chr1_test_anno.vcf
+		# java -jar ~/install/snpEff/SnpSift.jar dbnsfp -v -db /mnt/dbNSFP/hg19/dbNSFPv${version}_custombuild.gz test/chr1_test.vcf > test/chr1_test_anno.vcf
 		#TODO: provide actual unit test files for testing purposes, i.e. a section of public data with known annotation rates.
 		#TODO: the above is currently a placeholder but it had it's intended purpose in terms of identifying incorrect genome build. 
 
@@ -59,18 +59,18 @@ custom_build() {
 		# NOTE: bgzip parameter -@ X represents number of threads
 		echo "Building hg19 version..."
 
-		zcat dbNSFP_custombuild.gz | \
+		zcat dbNSFPv${version}_custombuild.gz | \
 		  awk '$8 != "."' | \
 		  awk 'BEGIN{FS=OFS="\t"} {$1=$8 && $2=$9; NF--}1'| \
 		  LC_ALL=C sort --parallel=${THREADS} -n -S 4G -T . -k 1,1 -k 2,2 --compress-program=gzip | \
-		  bgzip -@ ${THREADS} > dbNSFP.hg19.custombuild.gz
+		  bgzip -@ ${THREADS} > dbNSFPv${version}.hg19.custombuild.gz
 		# NOTE: removed target memory allocation  
 
 		# Create tabix index
-		tabix -s 1 -b 2 -e 2 dbNSFP.hg19.custombuild.gz
+		tabix -s 1 -b 2 -e 2 dbNSFPv${version}.hg19.custombuild.gz
 
 		# test hg19 annotation
-		# java -jar ~/install/snpEff/SnpSift.jar dbnsfp -v -db /mnt/dbNSFP/hg19/dbNSFP.hg19.custombuild.gz test/chr1_test.vcf > test/chr1_test_anno.vcf
+		# java -jar ~/install/snpEff/SnpSift.jar dbnsfp -v -db /mnt/dbNSFP/hg19/dbNSFPv${version}.hg19.custombuild.gz test/chr1_test.vcf > test/chr1_test_anno.vcf
 	fi 
 }
 

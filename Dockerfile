@@ -122,8 +122,8 @@ COPY --from=download_loftee /gerp* /opt/vep/.vep/Plugins/loftee/data/
 COPY --from=download_loftee /loftee* /opt/vep/.vep/Plugins/loftee/data/
 
 RUN mkdir -p /opt/vep/.vep/dbNSFP
-COPY --from=dbnsfp_build /data/dbNSFP_custombuild.gz /opt/vep/.vep/dbNSFP/
-COPY --from=dbnsfp_build /data/dbNSFP_custombuild.gz.tbi /opt/vep/.vep/dbNSFP/
+COPY --from=dbnsfp_build /data/dbNSFPv4.9a_custombuild.gz /opt/vep/.vep/dbNSFP/
+COPY --from=dbnsfp_build /data/dbNSFPv4.9a_custombuild.gz.tbi /opt/vep/.vep/dbNSFP/
 
 COPY --from=download_AlphaMissense /AlphaMissense* /opt/vep/.vep/Plugins/AlphaMissense/
 
