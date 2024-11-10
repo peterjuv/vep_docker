@@ -5,6 +5,11 @@ FROM alpine/git as intermediate
 #RUN git clone https://github.com/konradjk/loftee.git /loftee
 RUN git clone --single-branch --branch grch38 https://github.com/konradjk/loftee.git /loftee
 
+#### TODO FIX
+# [cmg@vglogin0002 vcfNormFilterMerge]$ cat d081e13a-dc8c-40b9-8cd7-68f4a23bc19e/call-RunVEP/shard-3109/attempt-3/execution/chrX__142929403_143929403.SGP9427_nrmFlt0.1Mrgd_ClinVar_vep.vcf.gz_warnings.txt 
+# WARNING: 590533 : WARNING: Plugin 'LoF' went wrong: tabix /vep/loftee/GERP_scores.final.sorted.txt.gz does not exist at /opt/vep/.vep/Plugins/loftee/gerp_dist.pl line 72.
+# WARNING: Plugin 'LoF' went wrong: tabix /vep/loftee/GERP_scores.final.sorted.txt.gz does not exist at /opt/vep/.vep/Plugins/loftee/gerp_dist.pl line 72.
+
 
 ##############################
 # STAGE 2 - Download loftee DBs
@@ -15,6 +20,7 @@ RUN wget https://personal.broadinstitute.org/konradk/loftee_data/GRCh38/human_an
 RUN wget https://personal.broadinstitute.org/konradk/loftee_data/GRCh38/human_ancestor.fa.gz.gzi -Y off
 RUN wget https://personal.broadinstitute.org/konradk/loftee_data/GRCh38/gerp_conservation_scores.homo_sapiens.GRCh38.bw -Y off
 RUN wget https://personal.broadinstitute.org/konradk/loftee_data/GRCh38/loftee.sql.gz -Y off
+RUN gunzip loftee.sql.gz
 RUN wget https://personal.broadinstitute.org/konradk/loftee_data/GRCh37/phylocsf_gerp.sql.gz -Y off
 
 ##############################
