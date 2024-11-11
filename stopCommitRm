@@ -1,0 +1,6 @@
+#!/bin/bash
+# Stop, commit and remove a running container
+CNAME=$(docker ps | grep 'peterjuv/vep_docker' | awk '{print $1}') &&
+docker container stop $CNAME &&
+docker container commit $CNAME peterjuv/vep_docker:latest &&
+docker container rm $CNAME
