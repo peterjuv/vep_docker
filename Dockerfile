@@ -97,7 +97,7 @@ RUN tabix -s 1 -b 2 -e 2 -f -S 1 AlphaMissense_hg38.tsv.gz
 # FROM ensemblorg/ensembl-vep:release_112.0
 
 ## Enforce rebuild ##
-ARG CACHEBUST=1
+# ARG CACHEBUST=1
 
 FROM ensemblorg/ensembl-vep:latest
 
@@ -121,6 +121,7 @@ RUN perl /opt/vep/src/ensembl-vep/INSTALL.pl \
 RUN vep -id rs699 \
       --cache --merged \
       --nearest symbol \
+      --use_given_ref \
       -o 'STDOUT' \
       --no_stats \
       > /dev/null
