@@ -96,6 +96,9 @@ RUN tabix -s 1 -b 2 -e 2 -f -S 1 AlphaMissense_hg38.tsv.gz
 # FROM ensemblorg/ensembl-vep:release_110.1
 # FROM ensemblorg/ensembl-vep:release_112.0
 
+## Enforce rebuild ##
+ARG CACHEBUST=1
+
 FROM ensemblorg/ensembl-vep:latest
 
 # Needs to be root to allow image modifications
