@@ -1,0 +1,1 @@
+docker build -t peterjuv/vep_docker:latest . -f Dockerfile_mod
