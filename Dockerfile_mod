@@ -1,2 +1,2 @@
-FROM peterjuv/vep_docker: latest
+FROM peterjuv/vep_docker:latest
 USER vep
